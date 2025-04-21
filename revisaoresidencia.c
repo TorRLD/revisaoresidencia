@@ -998,23 +998,24 @@
      last_button_time = current_time;
      
      if (gpio == BUTTON_SET && (events & GPIO_IRQ_EDGE_FALL)) {
-         // Em modo de treinamento, o botão SET já tem comportamento específico
-         // então não alteramos o modo global
-         if (menu_index != 2) {
-             if (!in_set_mode) {
-                 // Entra no modo de configuração do parâmetro atual
-                 in_set_mode = true;
-                 current_param = 0;
-             } else {
-                 // Avança para o próximo parâmetro ou sai do modo de configuração
-                 current_param++;
-                 if (current_param > 3) {
-                     in_set_mode = false;
-                 }
-             }
-             beep();
-         }
-     } else if (gpio == BUTTON_NEXT && (events & GPIO_IRQ_EDGE_FALL)) {
+        // Em modo de treinamento, o botão SET já tem comportamento específico
+        // então não alteramos o modo global
+        if (menu_index != 2) {
+            if (!in_set_mode) {
+                // Entra no modo de configuração do parâmetro atual
+                in_set_mode = true;
+                current_param = 0;
+            } else {
+                // Avança para o próximo parâmetro ou sai do modo de configuração
+                current_param++;
+                if (current_param > 3) {
+                    in_set_mode = false;
+                    current_param = 0;  // ADICIONE ESTA LINHA AQUI
+                }
+            }
+            beep();
+        }
+    } else if (gpio == BUTTON_NEXT && (events & GPIO_IRQ_EDGE_FALL)) {
          // Se não estiver em modo de configuração, avança para o próximo menu
          if (!in_set_mode) {
              menu_index = (menu_index + 1) % 4;
