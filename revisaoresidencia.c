@@ -130,56 +130,58 @@
  // Padrões visuais para a matriz de LEDs (5x5)
  //===============================================
  // Índice 0: Carinha Neutra, 1: Carinha Feliz, 2: Carinha Triste
- const bool padroes_carinhas[3][5][5] = {
-     { // Carinha Neutra
-       {false, true, false, true, false},
-       {false, true, false, true, false},
-       {false, false, false, false, false},
-       {true, false, false, false, true},
-       {false, true, true, true, false}
-     },
-     { // Carinha Feliz
-       {false, true, false, true, false},
-       {false, true, false, true, false},
-       {false, false, false, false, false},
-       {true, true, true, true, true},
-       {true, false, false, false, true}
-     },
-     { // Carinha Triste
-       {false, true, false, true, false},
-       {false, true, false, true, false},
-       {false, false, false, false, false},
-       {false, true, true, true, false},
-       {true, false, false, false, true}
-     }
- };
- 
- // Padrão de ondas cerebrais (simulado)
- const bool padrao_ondas[5][5] = {
-     {false, false, true, false, false},
-     {false, true, true, true, false},
-     {true, true, true, true, true},
-     {false, true, true, true, false},
-     {false, false, true, false, false}
- };
- 
- // Padrão para foco alto
- const bool padrao_foco[5][5] = {
-     {false, false, true, false, false},
-     {false, true, true, true, false},
-     {true, true, true, true, true},
-     {false, true, true, true, false},
-     {false, false, true, false, false}
- };
- 
- // Padrão para relaxamento
- const bool padrao_relaxamento[5][5] = {
-     {true, false, false, false, true},
-     {false, true, false, true, false},
-     {false, false, true, false, false},
-     {false, true, false, true, false},
-     {true, false, false, false, true}
- };
+ // Índice 0: Carinha Neutra, 1: Carinha Feliz, 2: Carinha Triste
+const bool padroes_carinhas[3][5][5] = {
+    { // Carinha Neutra
+      
+      {false, false, false, false, false},
+      {true, true, true, true, true},
+      {false, false, false, false, false},
+      {false, true, false, true, false},
+      {false, true, false, true, false}
+    },
+    { // Carinha Feliz
+        {false, true, true, true, false},
+        {true, false, false, false, true},
+        {false, false, false, false, false},
+        {false, true, false, true, false},
+        {false, true, false, true, false}
+    },
+    { // Carinha Triste
+      {true, false, false, false, true},
+      {false, true, true, true, false},
+      {false, false, false, false, false},
+      {false, true, false, true, false},
+      {false, true, false, true, false}
+    }
+};
+
+// Padrão de ondas cerebrais (simulado) - mantido igual pois é simétrico
+const bool padrao_ondas[5][5] = {
+    {false, false, true, false, false},
+    {false, true, true, true, false},
+    {true, true, true, true, true},
+    {false, true, true, true, false},
+    {false, false, true, false, false}
+};
+
+// Padrão para foco alto - mantido igual pois é simétrico
+const bool padrao_foco[5][5] = {
+    {false, false, true, false, false},
+    {false, true, true, true, false},
+    {true, true, true, true, true},
+    {false, true, true, true, false},
+    {false, false, true, false, false}
+};
+
+// Padrão para relaxamento - mantido igual pois é simétrico
+const bool padrao_relaxamento[5][5] = {
+    {true, false, false, false, true},
+    {false, true, false, true, false},
+    {false, false, true, false, false},
+    {false, true, false, true, false},
+    {true, false, false, false, true}
+};
  
  //===============================================
  // Funções auxiliares
@@ -1005,15 +1007,15 @@ void set_rgb_color(uint8_t r, uint8_t g, uint8_t b) {
  }
  
  //===============================================
- // Callback para os botões
- //===============================================
- void button_callback(uint gpio, uint32_t events) {
-     uint32_t current_time = time_us_32() / 1000;
-     if (current_time - last_button_time < DEBOUNCE_DELAY_MS) return;
-     last_button_time = current_time;
-     
-     if (gpio == BUTTON_SET && (events & GPIO_IRQ_EDGE_FALL)) {
-         // Em modo de treinamento, o botão SET já tem comportamento específico
+// Callback para os botões
+//===============================================
+void button_callback(uint gpio, uint32_t events) {
+    uint32_t current_time = time_us_32() / 1000;
+    if (current_time - last_button_time < DEBOUNCE_DELAY_MS) return;
+    last_button_time = current_time;
+    
+    if (gpio == BUTTON_SET && (events & GPIO_IRQ_EDGE_FALL)) {
+        // Em modo de treinamento, o botão SET já tem comportamento específico
         // então não alteramos o modo global
         if (menu_index != 2) {
             if (!in_set_mode) {
@@ -1025,25 +1027,32 @@ void set_rgb_color(uint8_t r, uint8_t g, uint8_t b) {
                 current_param++;
                 if (current_param > 3) {
                     in_set_mode = false;
-                    current_param = 0;  // ADICIONE ESTA LINHA AQUI
+                    current_param = 0;  // Corrige o bug do "Parâmetro Desconhecido"
                 }
             }
             beep();
-         }
-     } else if (gpio == BUTTON_NEXT && (events & GPIO_IRQ_EDGE_FALL)) {
-         // Se não estiver em modo de configuração, avança para o próximo menu
-         if (!in_set_mode) {
-             menu_index = (menu_index + 1) % 4;
-             beep();
-         }
-     } else if (gpio == BUTTON_BACK && (events & GPIO_IRQ_EDGE_FALL)) {
-         // Se não estiver em modo de configuração, retorna ao menu anterior
-         if (!in_set_mode) {
-             menu_index = (menu_index + 3) % 4; // +3 é equivalente a -1 em módulo 4
-             beep();
-         }
-     }
- }
+        }
+    } else if (gpio == BUTTON_NEXT && (events & GPIO_IRQ_EDGE_FALL)) {
+        // Se estamos no modo de treinamento e o treinamento não foi iniciado,
+        // não mudamos de modo (deixa a função executar_modo_treinamento() tratar isso)
+        if (menu_index == 2 && treinamento.status == 0) {
+            // Apenas emite um beep, mas não muda o menu_index
+            treinamento.objetivo = (treinamento.objetivo + 1) % 3;
+            beep();
+        }
+        // Caso contrário, se não estiver em modo de configuração, avança para o próximo menu
+        else if (!in_set_mode) {
+            menu_index = (menu_index + 1) % 4;
+            beep();
+        }
+    } else if (gpio == BUTTON_BACK && (events & GPIO_IRQ_EDGE_FALL)) {
+        // Se não estiver em modo de configuração, retorna ao menu anterior
+        if (!in_set_mode) {
+            menu_index = (menu_index + 3) % 4; // +3 é equivalente a -1 em módulo 4
+            beep();
+        }
+    }
+}
  
  //===============================================
  // Tela de boas-vindas no OLED
