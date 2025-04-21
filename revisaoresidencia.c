@@ -185,24 +185,39 @@
  // Funções auxiliares
  //===============================================
  
- // Inicializa o LED RGB
- void init_rgb_led() {
-     uint8_t pins[3] = {R_LED_PIN, G_LED_PIN, B_LED_PIN};
-     for (int i = 0; i < 3; i++) {
-         gpio_set_function(pins[i], GPIO_FUNC_PWM);
-         uint slice = pwm_gpio_to_slice_num(pins[i]);
-         pwm_set_wrap(slice, PWM_WRAP);
-         pwm_set_enabled(slice, true);
-     }
- }
+ // Updated LED RGB initialization for NeuroSync
+// Alternative approach: Drive green LED directly (not PWM)
+void init_rgb_led() {
+    // Configure RED and BLUE with PWM
+    gpio_set_function(R_LED_PIN, GPIO_FUNC_PWM);
+    gpio_set_function(B_LED_PIN, GPIO_FUNC_PWM);
+    
+    uint slice_r = pwm_gpio_to_slice_num(R_LED_PIN);
+    uint slice_b = pwm_gpio_to_slice_num(B_LED_PIN);
+    
+    pwm_set_wrap(slice_r, PWM_WRAP);
+    pwm_set_clkdiv(slice_r, 125.0f);
+    pwm_set_enabled(slice_r, true);
+    
+    if (slice_b != slice_r) {
+        pwm_set_wrap(slice_b, PWM_WRAP);
+        pwm_set_clkdiv(slice_b, 125.0f);
+        pwm_set_enabled(slice_b, true);
+    }
+    
+    // Configure GREEN as direct digital output
+    gpio_init(G_LED_PIN);
+    gpio_set_dir(G_LED_PIN, GPIO_OUT);
+}
+
+// Then modify set_rgb_color to handle this change:
+void set_rgb_color(uint8_t r, uint8_t g, uint8_t b) {
+    pwm_set_chan_level(pwm_gpio_to_slice_num(R_LED_PIN), pwm_gpio_to_channel(R_LED_PIN), r);
+    gpio_put(G_LED_PIN, g > 128); // Digital on/off based on green intensity
+    pwm_set_chan_level(pwm_gpio_to_slice_num(B_LED_PIN), pwm_gpio_to_channel(B_LED_PIN), b);
+}
  
- // Define a cor do LED RGB
- void set_rgb_color(uint8_t r, uint8_t g, uint8_t b) {
-     pwm_set_chan_level(pwm_gpio_to_slice_num(R_LED_PIN), pwm_gpio_to_channel(R_LED_PIN), r);
-     pwm_set_chan_level(pwm_gpio_to_slice_num(G_LED_PIN), pwm_gpio_to_channel(G_LED_PIN), g);
-     pwm_set_chan_level(pwm_gpio_to_slice_num(B_LED_PIN), pwm_gpio_to_channel(B_LED_PIN), b);
- }
- 
+
  //===============================================
  // Funções da matriz de LEDs
  //===============================================
@@ -998,7 +1013,7 @@
      last_button_time = current_time;
      
      if (gpio == BUTTON_SET && (events & GPIO_IRQ_EDGE_FALL)) {
-        // Em modo de treinamento, o botão SET já tem comportamento específico
+         // Em modo de treinamento, o botão SET já tem comportamento específico
         // então não alteramos o modo global
         if (menu_index != 2) {
             if (!in_set_mode) {
@@ -1014,8 +1029,8 @@
                 }
             }
             beep();
-        }
-    } else if (gpio == BUTTON_NEXT && (events & GPIO_IRQ_EDGE_FALL)) {
+         }
+     } else if (gpio == BUTTON_NEXT && (events & GPIO_IRQ_EDGE_FALL)) {
          // Se não estiver em modo de configuração, avança para o próximo menu
          if (!in_set_mode) {
              menu_index = (menu_index + 1) % 4;
